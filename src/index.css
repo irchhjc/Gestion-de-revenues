@@ -1,0 +1,64 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html, body {
+    @apply bg-ink-900 text-white antialiased;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    background:
+      radial-gradient(ellipse at top, rgba(91, 127, 255, 0.15) 0%, transparent 50%),
+      radial-gradient(ellipse at bottom right, rgba(61, 220, 151, 0.08) 0%, transparent 50%),
+      #0A0E1A;
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  input, button, select, textarea {
+    font-family: inherit;
+  }
+
+  input::-webkit-outer-spin-button,
+  input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input[type=number] {
+    -moz-appearance: textfield;
+  }
+}
+
+@layer components {
+  .glass {
+    @apply bg-white/[0.04] backdrop-blur-xl border border-white/[0.08];
+  }
+  .glass-strong {
+    @apply bg-white/[0.06] backdrop-blur-xl border border-white/[0.1];
+  }
+  .btn-primary {
+    @apply bg-gradient-to-r from-accent-500 to-accent-600 text-white font-semibold shadow-glow active:scale-[0.98] transition-transform;
+  }
+  .input-base {
+    @apply w-full bg-white/[0.04] border border-white/[0.08] rounded-2xl px-4 py-3.5 text-white placeholder:text-white/30 focus:outline-none focus:border-accent-500/60 focus:bg-white/[0.06] transition;
+  }
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .safe-top {
+    padding-top: env(safe-area-inset-top);
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 999px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
