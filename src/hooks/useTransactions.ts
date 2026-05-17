@@ -9,13 +9,14 @@ export function useTransactions() {
     saveTransactions(items)
   }, [items])
 
-  const add = useCallback((t: Omit<Transaction, 'id' | 'createdAt'>) => {
+  const add = useCallback((t: Omit<Transaction, 'id' | 'createdAt'>): Transaction => {
     const tx: Transaction = {
       ...t,
       id: crypto.randomUUID(),
       createdAt: Date.now(),
     }
     setItems(prev => [tx, ...prev])
+    return tx
   }, [])
 
   const remove = useCallback((id: string) => {

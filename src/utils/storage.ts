@@ -1,4 +1,4 @@
-import type { Transaction } from '../types'
+import type { Planned, Transaction } from '../types'
 
 const KEY = 'mon-budget:transactions:v1'
 
@@ -22,8 +22,13 @@ export function saveTransactions(items: Transaction[]): void {
   }
 }
 
-export function exportJSON(items: Transaction[]): void {
-  const blob = new Blob([JSON.stringify(items, null, 2)], { type: 'application/json' })
+export function exportJSON(transactions: Transaction[], planned: Planned[]): void {
+  const payload = {
+    exportedAt: new Date().toISOString(),
+    transactions,
+    planned,
+  }
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' })
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
