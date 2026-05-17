@@ -10,6 +10,7 @@ import {
   Handshake,
   RotateCcw,
   Trash2,
+  Undo2,
   XCircle,
 } from 'lucide-react'
 import type { Planned } from '../types'
@@ -20,20 +21,30 @@ import { Icon } from './Icon'
 
 interface Props {
   totals: PlannedTotals
-  grouped: { overdue: Planned[]; upcoming: Planned[]; done: Planned[] }
+  grouped: { overdue: Planned[]; upcoming: Planned[]; undated: Planned[]; done: Planned[] }
   onValidate: (p: Planned) => void
+  onUnvalidate: (p: Planned) => void
   onCancel: (id: string) => void
   onRestore: (id: string) => void
   onDelete: (id: string) => void
 }
 
-export function PlannedView({ totals, grouped, onValidate, onCancel, onRestore, onDelete }: Props) {
+export function PlannedView({
+  totals,
+  grouped,
+  onValidate,
+  onUnvalidate,
+  onCancel,
+  onRestore,
+  onDelete,
+}: Props) {
   const [doneOpen, setDoneOpen] = useState(false)
-  const hasAny = grouped.overdue.length + grouped.upcoming.length + grouped.done.length > 0
+  const hasAny =
+    grouped.overdue.length + grouped.upcoming.length + grouped.undated.length + grouped.done.length >
+    0
 
   return (
     <div className="px-5 mt-6 space-y-5 pb-32 animate-fade-in">
-      {/* Summary */}
       <div className="grid grid-cols-2 gap-3">
         <div className="glass rounded-2xl p-4">
           <div className="flex items-center gap-2 text-white/60 text-xs font-medium">
@@ -75,13 +86,14 @@ export function PlannedView({ totals, grouped, onValidate, onCancel, onRestore, 
       )}
 
       {grouped.overdue.length > 0 && (
-        <Section title="En retard" tone="danger" items={grouped.overdue}>
+        <Section title="En retard" tone="danger" count={grouped.overdue.length}>
           {grouped.overdue.map(p => (
             <PlannedItem
               key={p.id}
               p={p}
               tone="danger"
               onValidate={() => onValidate(p)}
+              onUnvalidate={() => onUnvalidate(p)}
               onCancel={() => onCancel(p.id)}
               onDelete={() => onDelete(p.id)}
             />
@@ -90,13 +102,30 @@ export function PlannedView({ totals, grouped, onValidate, onCancel, onRestore, 
       )}
 
       {grouped.upcoming.length > 0 && (
-        <Section title="À venir" tone="accent" items={grouped.upcoming}>
+        <Section title="À venir" tone="accent" count={grouped.upcoming.length}>
           {grouped.upcoming.map(p => (
             <PlannedItem
               key={p.id}
               p={p}
               tone="accent"
               onValidate={() => onValidate(p)}
+              onUnvalidate={() => onUnvalidate(p)}
+              onCancel={() => onCancel(p.id)}
+              onDelete={() => onDelete(p.id)}
+            />
+          ))}
+        </Section>
+      )}
+
+      {grouped.undated.length > 0 && (
+        <Section title="Sans date" tone="muted" count={grouped.undated.length}>
+          {grouped.undated.map(p => (
+            <PlannedItem
+              key={p.id}
+              p={p}
+              tone="accent"
+              onValidate={() => onValidate(p)}
+              onUnvalidate={() => onUnvalidate(p)}
               onCancel={() => onCancel(p.id)}
               onDelete={() => onDelete(p.id)}
             />
@@ -126,6 +155,7 @@ export function PlannedView({ totals, grouped, onValidate, onCancel, onRestore, 
                   p={p}
                   tone="done"
                   onValidate={() => {}}
+                  onUnvalidate={() => onUnvalidate(p)}
                   onRestore={() => onRestore(p.id)}
                   onCancel={() => onCancel(p.id)}
                   onDelete={() => onDelete(p.id)}
@@ -142,12 +172,12 @@ export function PlannedView({ totals, grouped, onValidate, onCancel, onRestore, 
 function Section({
   title,
   tone,
-  items,
+  count,
   children,
 }: {
   title: string
-  tone: 'danger' | 'accent'
-  items: Planned[]
+  tone: 'danger' | 'accent' | 'muted'
+  count: number
   children: React.ReactNode
 }) {
   return (
@@ -155,12 +185,12 @@ function Section({
       <div className="flex items-center justify-between mb-2 px-1">
         <h3
           className={`text-xs font-semibold uppercase tracking-wider ${
-            tone === 'danger' ? 'text-danger-400' : 'text-white/60'
+            tone === 'danger' ? 'text-danger-400' : tone === 'muted' ? 'text-white/40' : 'text-white/60'
           }`}
         >
           {title}
         </h3>
-        <span className="text-white/40 text-xs">{items.length}</span>
+        <span className="text-white/40 text-xs">{count}</span>
       </div>
       <div className="space-y-2">{children}</div>
     </div>
@@ -171,6 +201,7 @@ function PlannedItem({
   p,
   tone,
   onValidate,
+  onUnvalidate,
   onCancel,
   onRestore,
   onDelete,
@@ -178,6 +209,7 @@ function PlannedItem({
   p: Planned
   tone: 'danger' | 'accent' | 'done'
   onValidate: () => void
+  onUnvalidate: () => void
   onCancel: () => void
   onRestore?: () => void
   onDelete: () => void
@@ -242,7 +274,9 @@ function PlannedItem({
                 ? `Validé ${formatDate(p.paidAt)}`
                 : p.status === 'cancelled'
                 ? 'Annulé'
-                : formatDate(p.dueDate)}
+                : p.dueDate
+                ? formatDate(p.dueDate)
+                : 'Sans date'}
             </span>
           </div>
           {p.note && <div className="text-white/40 text-[11px] truncate mt-0.5">{p.note}</div>}
@@ -290,7 +324,16 @@ function PlannedItem({
               </button>
             </>
           )}
-          {p.status !== 'pending' && onRestore && (
+          {p.status === 'paid' && (
+            <button
+              onClick={onUnvalidate}
+              className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-amber-500/10 text-amber-400 font-semibold text-xs active:scale-95 transition"
+            >
+              <Undo2 size={14} />
+              Annuler la validation
+            </button>
+          )}
+          {p.status === 'cancelled' && onRestore && (
             <button
               onClick={onRestore}
               className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-white/5 text-white/80 font-semibold text-xs active:scale-95 transition"

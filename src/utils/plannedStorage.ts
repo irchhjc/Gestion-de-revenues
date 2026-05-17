@@ -1,22 +1,22 @@
 import type { Planned } from '../types'
 
-const KEY = 'mon-budget:planned:v1'
+const BASE = 'mon-budget:planned:v1'
+const keyFor = (userId: string) => `${BASE}:${userId}`
 
-export function loadPlanned(): Planned[] {
+export function loadPlanned(userId: string): Planned[] {
   try {
-    const raw = localStorage.getItem(KEY)
+    const raw = localStorage.getItem(keyFor(userId))
     if (!raw) return []
     const parsed = JSON.parse(raw)
-    if (!Array.isArray(parsed)) return []
-    return parsed
+    return Array.isArray(parsed) ? parsed : []
   } catch {
     return []
   }
 }
 
-export function savePlanned(items: Planned[]): void {
+export function savePlanned(userId: string, items: Planned[]): void {
   try {
-    localStorage.setItem(KEY, JSON.stringify(items))
+    localStorage.setItem(keyFor(userId), JSON.stringify(items))
   } catch (e) {
     console.error('Erreur de sauvegarde planned', e)
   }

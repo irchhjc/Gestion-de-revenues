@@ -2,12 +2,12 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { Transaction } from '../types'
 import { loadTransactions, saveTransactions } from '../utils/storage'
 
-export function useTransactions() {
-  const [items, setItems] = useState<Transaction[]>(() => loadTransactions())
+export function useTransactions(userId: string) {
+  const [items, setItems] = useState<Transaction[]>(() => loadTransactions(userId))
 
   useEffect(() => {
-    saveTransactions(items)
-  }, [items])
+    saveTransactions(userId, items)
+  }, [userId, items])
 
   const add = useCallback((t: Omit<Transaction, 'id' | 'createdAt'>): Transaction => {
     const tx: Transaction = {
@@ -56,7 +56,10 @@ export function useTransactions() {
   }, [items])
 
   const sorted = useMemo(
-    () => [...items].sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : b.createdAt - a.createdAt)),
+    () =>
+      [...items].sort((a, b) =>
+        a.date < b.date ? 1 : a.date > b.date ? -1 : b.createdAt - a.createdAt
+      ),
     [items]
   )
 

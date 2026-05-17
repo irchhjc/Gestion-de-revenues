@@ -1,25 +1,30 @@
 import type { Planned, Transaction } from '../types'
 
-const KEY = 'mon-budget:transactions:v1'
+const TX_BASE = 'mon-budget:transactions:v1'
+const txKey = (userId: string) => `${TX_BASE}:${userId}`
 
-export function loadTransactions(): Transaction[] {
+export function loadTransactions(userId: string): Transaction[] {
   try {
-    const raw = localStorage.getItem(KEY)
+    const raw = localStorage.getItem(txKey(userId))
     if (!raw) return []
     const parsed = JSON.parse(raw)
-    if (!Array.isArray(parsed)) return []
-    return parsed
+    return Array.isArray(parsed) ? parsed : []
   } catch {
     return []
   }
 }
 
-export function saveTransactions(items: Transaction[]): void {
+export function saveTransactions(userId: string, items: Transaction[]): void {
   try {
-    localStorage.setItem(KEY, JSON.stringify(items))
+    localStorage.setItem(txKey(userId), JSON.stringify(items))
   } catch (e) {
     console.error('Erreur de sauvegarde', e)
   }
+}
+
+export function clearUserData(userId: string): void {
+  localStorage.removeItem(txKey(userId))
+  localStorage.removeItem(`mon-budget:planned:v1:${userId}`)
 }
 
 export function exportJSON(transactions: Transaction[], planned: Planned[]): void {

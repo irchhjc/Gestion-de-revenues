@@ -14,7 +14,7 @@ interface Props {
     title: string
     amount: number
     txCategory: string
-    dueDate: string
+    dueDate?: string
     note: string
   }) => void
 }
@@ -25,6 +25,7 @@ export function PlannedForm({ open, onClose, onSubmit }: Props) {
   const [title, setTitle] = useState('')
   const [amount, setAmount] = useState('')
   const [category, setCategory] = useState('')
+  const [hasDate, setHasDate] = useState(true)
   const [dueDate, setDueDate] = useState(todayISO())
   const [note, setNote] = useState('')
 
@@ -35,6 +36,7 @@ export function PlannedForm({ open, onClose, onSubmit }: Props) {
       setTitle('')
       setAmount('')
       setCategory('')
+      setHasDate(true)
       setDueDate(todayISO())
       setNote('')
     }
@@ -58,7 +60,7 @@ export function PlannedForm({ open, onClose, onSubmit }: Props) {
       title: title.trim(),
       amount: Math.round(numAmount),
       txCategory: category,
-      dueDate,
+      dueDate: hasDate ? dueDate : undefined,
       note: note.trim(),
     })
     onClose()
@@ -223,17 +225,36 @@ export function PlannedForm({ open, onClose, onSubmit }: Props) {
             </div>
           </div>
 
-          {/* Due date */}
+          {/* Due date (optional) */}
           <div>
-            <label className="text-white/60 text-xs font-semibold uppercase tracking-wider px-1">
-              Date d'échéance
-            </label>
-            <input
-              type="date"
-              value={dueDate}
-              onChange={e => setDueDate(e.target.value)}
-              className="input-base mt-2"
-            />
+            <div className="flex items-center justify-between px-1">
+              <label className="text-white/60 text-xs font-semibold uppercase tracking-wider">
+                Date d'échéance
+              </label>
+              <button
+                type="button"
+                onClick={() => setHasDate(d => !d)}
+                className={`text-[10px] font-semibold uppercase tracking-wider px-2 py-1 rounded-lg transition ${
+                  hasDate
+                    ? 'text-white/40 hover:text-white/60'
+                    : 'text-accent-400 bg-accent-500/10'
+                }`}
+              >
+                {hasDate ? 'Sans date' : 'Avec date'}
+              </button>
+            </div>
+            {hasDate ? (
+              <input
+                type="date"
+                value={dueDate}
+                onChange={e => setDueDate(e.target.value)}
+                className="input-base mt-2"
+              />
+            ) : (
+              <div className="input-base mt-2 text-white/40 text-sm">
+                Pas de date limite — à valider quand vous voulez
+              </div>
+            )}
           </div>
 
           {/* Note */}

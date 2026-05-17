@@ -3,14 +3,14 @@ import type { Planned } from '../types'
 import { loadPlanned, savePlanned } from '../utils/plannedStorage'
 
 export interface PlannedTotals {
-  toPay: number // total pending outgoing
-  toReceive: number // total pending incoming
+  toPay: number
+  toReceive: number
   overdueCount: number
-  upcomingCount: number // pending and not overdue
+  upcomingCount: number
 }
 
 function isOverdue(p: Planned, today: string): boolean {
-  return p.status === 'pending' && p.dueDate < today
+  return p.status === 'pending' && !!p.dueDate && p.dueDate < today
 }
 
 function todayISO(): string {
@@ -21,12 +21,12 @@ function todayISO(): string {
   return `${y}-${m}-${day}`
 }
 
-export function usePlanned() {
-  const [items, setItems] = useState<Planned[]>(() => loadPlanned())
+export function usePlanned(userId: string) {
+  const [items, setItems] = useState<Planned[]>(() => loadPlanned(userId))
 
   useEffect(() => {
-    savePlanned(items)
-  }, [items])
+    savePlanned(userId, items)
+  }, [userId, items])
 
   const add = useCallback((p: Omit<Planned, 'id' | 'createdAt' | 'status'>) => {
     const planned: Planned = {
@@ -76,6 +76,8 @@ export function usePlanned() {
     )
   }, [])
 
+  const clearAll = useCallback(() => setItems([]), [])
+
   const totals: PlannedTotals = useMemo(() => {
     const today = todayISO()
     let toPay = 0
@@ -96,20 +98,23 @@ export function usePlanned() {
     const today = todayISO()
     const overdue: Planned[] = []
     const upcoming: Planned[] = []
+    const undated: Planned[] = []
     const done: Planned[] = []
     for (const p of items) {
       if (p.status === 'pending') {
-        if (isOverdue(p, today)) overdue.push(p)
+        if (!p.dueDate) undated.push(p)
+        else if (isOverdue(p, today)) overdue.push(p)
         else upcoming.push(p)
       } else {
         done.push(p)
       }
     }
-    overdue.sort((a, b) => (a.dueDate < b.dueDate ? -1 : 1))
-    upcoming.sort((a, b) => (a.dueDate < b.dueDate ? -1 : 1))
+    overdue.sort((a, b) => ((a.dueDate || '') < (b.dueDate || '') ? -1 : 1))
+    upcoming.sort((a, b) => ((a.dueDate || '') < (b.dueDate || '') ? -1 : 1))
+    undated.sort((a, b) => b.createdAt - a.createdAt)
     done.sort((a, b) => ((a.paidAt || '') < (b.paidAt || '') ? 1 : -1))
-    return { overdue, upcoming, done }
+    return { overdue, upcoming, undated, done }
   }, [items])
 
-  return { items, add, remove, update, markPaid, cancel, restore, totals, grouped }
+  return { items, add, remove, update, markPaid, cancel, restore, clearAll, totals, grouped }
 }
