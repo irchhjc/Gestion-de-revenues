@@ -84,7 +84,7 @@ export function StatsView({ items }: Props) {
       if (t.type === 'income') {
         income += t.amount
         if (!largestIncome || t.amount > largestIncome.amount) largestIncome = t
-      } else {
+      } else if (t.type === 'expense') {
         expense += t.amount
         if (!largestExpense || t.amount > largestExpense.amount) largestExpense = t
       }
@@ -112,6 +112,7 @@ export function StatsView({ items }: Props) {
     const exp = new Map<string, number>()
     const inc = new Map<string, number>()
     for (const t of filtered) {
+      if (t.type === 'transfer') continue
       const map = t.type === 'expense' ? exp : inc
       map.set(t.category, (map.get(t.category) || 0) + t.amount)
     }
@@ -125,6 +126,7 @@ export function StatsView({ items }: Props) {
   const monthly = useMemo(() => {
     const map = new Map<string, { income: number; expense: number }>()
     for (const t of filtered) {
+      if (t.type === 'transfer') continue
       const key = t.date.slice(0, 7)
       const e = map.get(key) || { income: 0, expense: 0 }
       if (t.type === 'income') e.income += t.amount
@@ -142,12 +144,12 @@ export function StatsView({ items }: Props) {
   }, [filtered])
 
   const balanceSeries = useMemo(() => {
-    // cumulative net by date (sorted ASC)
     const sorted = [...filtered].sort((a, b) => (a.date < b.date ? -1 : 1))
     let running = 0
     const points: { date: string; balance: number }[] = []
     const byDay = new Map<string, number>()
     for (const t of sorted) {
+      if (t.type === 'transfer') continue
       const delta = t.type === 'income' ? t.amount : -t.amount
       byDay.set(t.date, (byDay.get(t.date) || 0) + delta)
     }
@@ -160,7 +162,11 @@ export function StatsView({ items }: Props) {
   }, [filtered])
 
   const top5 = useMemo(
-    () => [...filtered].sort((a, b) => b.amount - a.amount).slice(0, 5),
+    () =>
+      [...filtered]
+        .filter(t => t.type !== 'transfer')
+        .sort((a, b) => b.amount - a.amount)
+        .slice(0, 5),
     [filtered]
   )
 

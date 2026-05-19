@@ -1,6 +1,19 @@
-import { AlertTriangle, ArrowDownRight, ArrowUpRight, Eye, EyeOff, TrendingDown, Wallet } from 'lucide-react'
+import {
+  AlertTriangle,
+  ArrowDownRight,
+  ArrowUpRight,
+  Eye,
+  EyeOff,
+  Plus,
+  Settings2,
+  TrendingDown,
+  Wallet,
+} from 'lucide-react'
 import { useState } from 'react'
+import type { Account } from '../types'
+import { ACCOUNT_KINDS } from '../utils/accounts'
 import { formatAmount } from '../utils/format'
+import { Icon } from './Icon'
 
 interface Props {
   balance: number
@@ -11,7 +24,10 @@ interface Props {
   toPay: number
   toReceive: number
   overdueCount: number
+  accounts: Account[]
+  balances: Map<string, number>
   onOpenPlanned: () => void
+  onManageAccounts: () => void
 }
 
 export function Dashboard({
@@ -23,11 +39,15 @@ export function Dashboard({
   toPay,
   toReceive,
   overdueCount,
+  accounts,
+  balances,
   onOpenPlanned,
+  onManageAccounts,
 }: Props) {
   const [hidden, setHidden] = useState(false)
   const projected = balance + toReceive - toPay
   const hasForecast = toPay > 0 || toReceive > 0
+  const activeAccounts = accounts.filter(a => !a.archived)
 
   return (
     <div className="px-5 pt-6 animate-fade-in">
@@ -39,14 +59,18 @@ export function Dashboard({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 text-white/80 text-sm">
               <Wallet size={16} />
-              <span className="font-medium">Solde restant</span>
+              <span className="font-medium">Solde total</span>
             </div>
             <button
               onClick={() => setHidden(h => !h)}
               className="p-2 rounded-xl bg-white/10 hover:bg-white/20 transition"
               aria-label={hidden ? 'Afficher' : 'Masquer'}
             >
-              {hidden ? <EyeOff size={16} className="text-white" /> : <Eye size={16} className="text-white" />}
+              {hidden ? (
+                <EyeOff size={16} className="text-white" />
+              ) : (
+                <Eye size={16} className="text-white" />
+              )}
             </button>
           </div>
 
@@ -58,7 +82,9 @@ export function Dashboard({
             <div className="mt-2 flex items-center gap-1.5 text-white/80 text-xs">
               <TrendingDown size={12} />
               <span>Après échéances :</span>
-              <span className="font-bold text-white">{formatAmount(projected, { compact: true })}</span>
+              <span className="font-bold text-white">
+                {formatAmount(projected, { compact: true })}
+              </span>
             </div>
           )}
 
@@ -81,6 +107,63 @@ export function Dashboard({
                 {hidden ? '•••' : formatAmount(expense, { compact: true })}
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Accounts strip */}
+      <div className="mt-5">
+        <div className="flex items-center justify-between mb-2 px-1">
+          <h2 className="text-white font-bold text-sm">Mes comptes</h2>
+          <button
+            onClick={onManageAccounts}
+            className="flex items-center gap-1 text-accent-400 text-xs font-semibold hover:text-accent-500"
+          >
+            <Settings2 size={12} />
+            Gérer
+          </button>
+        </div>
+        <div className="-mx-5 px-5 overflow-x-auto">
+          <div className="flex gap-3 min-w-min pb-1">
+            {activeAccounts.map(a => {
+              const meta = ACCOUNT_KINDS[a.kind]
+              const b = balances.get(a.id) || 0
+              return (
+                <button
+                  key={a.id}
+                  onClick={onManageAccounts}
+                  className="shrink-0 w-40 glass rounded-2xl p-3 text-left active:scale-[0.98] transition"
+                >
+                  <div className="flex items-center gap-2">
+                    <div
+                      className={`w-8 h-8 rounded-lg bg-gradient-to-br ${meta.color} flex items-center justify-center shrink-0`}
+                    >
+                      <Icon name={meta.icon} size={16} className="text-white" />
+                    </div>
+                    <p className="text-white/60 text-[10px] font-semibold uppercase tracking-wider truncate">
+                      {meta.label}
+                    </p>
+                  </div>
+                  <p className="mt-2 text-white text-xs font-semibold truncate">{a.name}</p>
+                  <p
+                    className={`mt-0.5 font-bold text-base ${
+                      b >= 0 ? 'text-white' : 'text-danger-400'
+                    }`}
+                  >
+                    {hidden ? '•••' : formatAmount(b, { compact: true })}
+                  </p>
+                </button>
+              )
+            })}
+            <button
+              onClick={onManageAccounts}
+              className="shrink-0 w-32 rounded-2xl border border-dashed border-white/15 bg-white/[0.02] flex flex-col items-center justify-center gap-1.5 py-4 text-white/40 active:scale-[0.98] transition"
+            >
+              <Plus size={20} />
+              <span className="text-[10px] font-semibold uppercase tracking-wider">
+                Ajouter
+              </span>
+            </button>
           </div>
         </div>
       </div>

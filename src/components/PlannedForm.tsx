@@ -1,30 +1,41 @@
 import { useEffect, useState } from 'react'
 import { X, Check, ArrowDownToLine, ArrowUpFromLine, Calendar, Handshake } from 'lucide-react'
-import type { PlannedDirection, PlannedKind } from '../types'
+import type { Account, PlannedDirection, PlannedKind } from '../types'
 import { categoriesByType } from '../utils/categories'
 import { todayISO } from '../utils/format'
 import { Icon } from './Icon'
+import { AccountSelector } from './AccountSelector'
 
 interface Props {
   open: boolean
   onClose: () => void
+  accounts: Account[]
+  defaultAccountId: string
   onSubmit: (p: {
     kind: PlannedKind
     direction: PlannedDirection
     title: string
     amount: number
     txCategory: string
+    accountId: string
     dueDate?: string
     note: string
   }) => void
 }
 
-export function PlannedForm({ open, onClose, onSubmit }: Props) {
+export function PlannedForm({
+  open,
+  onClose,
+  accounts,
+  defaultAccountId,
+  onSubmit,
+}: Props) {
   const [direction, setDirection] = useState<PlannedDirection>('out')
   const [kind, setKind] = useState<PlannedKind>('scheduled')
   const [title, setTitle] = useState('')
   const [amount, setAmount] = useState('')
   const [category, setCategory] = useState('')
+  const [accountId, setAccountId] = useState(defaultAccountId)
   const [hasDate, setHasDate] = useState(true)
   const [dueDate, setDueDate] = useState(todayISO())
   const [note, setNote] = useState('')
@@ -36,11 +47,12 @@ export function PlannedForm({ open, onClose, onSubmit }: Props) {
       setTitle('')
       setAmount('')
       setCategory('')
+      setAccountId(defaultAccountId)
       setHasDate(true)
       setDueDate(todayISO())
       setNote('')
     }
-  }, [open])
+  }, [open, defaultAccountId])
 
   useEffect(() => {
     setCategory('')
@@ -50,7 +62,7 @@ export function PlannedForm({ open, onClose, onSubmit }: Props) {
 
   const cats = categoriesByType(direction === 'out' ? 'expense' : 'income')
   const numAmount = parseFloat(amount.replace(',', '.')) || 0
-  const valid = numAmount > 0 && title.trim() && category
+  const valid = numAmount > 0 && title.trim() && category && accountId
 
   const submit = () => {
     if (!valid) return
@@ -60,6 +72,7 @@ export function PlannedForm({ open, onClose, onSubmit }: Props) {
       title: title.trim(),
       amount: Math.round(numAmount),
       txCategory: category,
+      accountId,
       dueDate: hasDate ? dueDate : undefined,
       note: note.trim(),
     })
@@ -150,6 +163,14 @@ export function PlannedForm({ open, onClose, onSubmit }: Props) {
               </button>
             </div>
           </div>
+
+          {/* Account */}
+          <AccountSelector
+            accounts={accounts}
+            value={accountId}
+            onChange={setAccountId}
+            label={direction === 'out' ? 'Compte à débiter' : 'Compte à créditer'}
+          />
 
           {/* Title */}
           <div>

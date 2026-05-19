@@ -25,6 +25,7 @@ export function saveTransactions(userId: string, items: Transaction[]): void {
 export function clearUserData(userId: string): void {
   localStorage.removeItem(txKey(userId))
   localStorage.removeItem(`mon-budget:planned:v1:${userId}`)
+  localStorage.removeItem(`mon-budget:accounts:v1:${userId}`)
 }
 
 export function exportJSON(transactions: Transaction[], planned: Planned[]): void {

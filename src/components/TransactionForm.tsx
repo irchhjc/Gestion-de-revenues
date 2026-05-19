@@ -1,20 +1,37 @@
 import { useEffect, useState } from 'react'
 import { X, Check } from 'lucide-react'
-import type { TransactionType } from '../types'
+import type { Account } from '../types'
 import { categoriesByType } from '../utils/categories'
 import { todayISO } from '../utils/format'
 import { Icon } from './Icon'
+import { AccountSelector } from './AccountSelector'
 
 interface Props {
   open: boolean
   onClose: () => void
-  onSubmit: (t: { type: TransactionType; amount: number; category: string; note: string; date: string }) => void
+  accounts: Account[]
+  defaultAccountId: string
+  onSubmit: (t: {
+    type: 'income' | 'expense'
+    amount: number
+    category: string
+    note: string
+    date: string
+    accountId: string
+  }) => void
 }
 
-export function TransactionForm({ open, onClose, onSubmit }: Props) {
-  const [type, setType] = useState<TransactionType>('expense')
+export function TransactionForm({
+  open,
+  onClose,
+  accounts,
+  defaultAccountId,
+  onSubmit,
+}: Props) {
+  const [type, setType] = useState<'income' | 'expense'>('expense')
   const [amount, setAmount] = useState('')
   const [category, setCategory] = useState('')
+  const [accountId, setAccountId] = useState(defaultAccountId)
   const [note, setNote] = useState('')
   const [date, setDate] = useState(todayISO())
 
@@ -23,10 +40,11 @@ export function TransactionForm({ open, onClose, onSubmit }: Props) {
       setType('expense')
       setAmount('')
       setCategory('')
+      setAccountId(defaultAccountId)
       setNote('')
       setDate(todayISO())
     }
-  }, [open])
+  }, [open, defaultAccountId])
 
   useEffect(() => {
     setCategory('')
@@ -36,11 +54,11 @@ export function TransactionForm({ open, onClose, onSubmit }: Props) {
 
   const cats = categoriesByType(type)
   const numAmount = parseFloat(amount.replace(',', '.')) || 0
-  const valid = numAmount > 0 && category
+  const valid = numAmount > 0 && category && accountId
 
   const handleSubmit = () => {
     if (!valid) return
-    onSubmit({ type, amount: Math.round(numAmount), category, note: note.trim(), date })
+    onSubmit({ type, amount: Math.round(numAmount), category, note: note.trim(), date, accountId })
     onClose()
   }
 
@@ -53,7 +71,6 @@ export function TransactionForm({ open, onClose, onSubmit }: Props) {
         className="w-full sm:max-w-md bg-ink-800 rounded-t-3xl sm:rounded-3xl border-t sm:border border-white/10 max-h-[92vh] overflow-y-auto animate-slide-up"
         onClick={e => e.stopPropagation()}
       >
-        {/* Header */}
         <div className="sticky top-0 bg-ink-800/95 backdrop-blur-xl z-10 px-5 pt-4 pb-3 border-b border-white/[0.06]">
           <div className="flex items-center justify-between">
             <h2 className="text-white font-bold text-lg">Nouvelle transaction</h2>
@@ -67,7 +84,6 @@ export function TransactionForm({ open, onClose, onSubmit }: Props) {
         </div>
 
         <div className="p-5 space-y-5">
-          {/* Type toggle */}
           <div className="grid grid-cols-2 gap-2 p-1 bg-white/[0.04] rounded-2xl">
             <button
               onClick={() => setType('expense')}
@@ -91,7 +107,13 @@ export function TransactionForm({ open, onClose, onSubmit }: Props) {
             </button>
           </div>
 
-          {/* Amount */}
+          <AccountSelector
+            accounts={accounts}
+            value={accountId}
+            onChange={setAccountId}
+            label={type === 'income' ? 'Vers quel compte' : 'Depuis quel compte'}
+          />
+
           <div>
             <label className="text-white/60 text-xs font-semibold uppercase tracking-wider px-1">
               Montant
@@ -104,7 +126,6 @@ export function TransactionForm({ open, onClose, onSubmit }: Props) {
                 value={amount}
                 onChange={e => setAmount(e.target.value.replace(/[^0-9.,]/g, ''))}
                 className="w-full bg-white/[0.04] border border-white/[0.08] rounded-2xl pl-4 pr-20 py-4 text-2xl font-bold text-white placeholder:text-white/20 focus:outline-none focus:border-accent-500/60 focus:bg-white/[0.06] transition"
-                autoFocus
               />
               <div className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 font-semibold">
                 FCFA
@@ -112,7 +133,6 @@ export function TransactionForm({ open, onClose, onSubmit }: Props) {
             </div>
           </div>
 
-          {/* Category */}
           <div>
             <label className="text-white/60 text-xs font-semibold uppercase tracking-wider px-1">
               Catégorie
@@ -144,7 +164,6 @@ export function TransactionForm({ open, onClose, onSubmit }: Props) {
             </div>
           </div>
 
-          {/* Note */}
           <div>
             <label className="text-white/60 text-xs font-semibold uppercase tracking-wider px-1">
               Note (optionnel)
@@ -159,7 +178,6 @@ export function TransactionForm({ open, onClose, onSubmit }: Props) {
             />
           </div>
 
-          {/* Date */}
           <div>
             <label className="text-white/60 text-xs font-semibold uppercase tracking-wider px-1">
               Date
@@ -173,7 +191,6 @@ export function TransactionForm({ open, onClose, onSubmit }: Props) {
           </div>
         </div>
 
-        {/* Footer */}
         <div className="sticky bottom-0 bg-ink-800/95 backdrop-blur-xl border-t border-white/[0.06] p-4 safe-bottom">
           <button
             onClick={handleSubmit}

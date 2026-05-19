@@ -2,8 +2,12 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { Transaction } from '../types'
 import { loadTransactions, saveTransactions } from '../utils/storage'
 
-export function useTransactions(userId: string) {
-  const [items, setItems] = useState<Transaction[]>(() => loadTransactions(userId))
+export function useTransactions(userId: string, defaultAccountId: string) {
+  const [items, setItems] = useState<Transaction[]>(() => {
+    const loaded = loadTransactions(userId)
+    // migration : assigner le compte par défaut aux transactions sans accountId
+    return loaded.map(t => (t.accountId ? t : { ...t, accountId: defaultAccountId }))
+  })
 
   useEffect(() => {
     saveTransactions(userId, items)
@@ -34,7 +38,8 @@ export function useTransactions(userId: string) {
     let expense = 0
     for (const t of items) {
       if (t.type === 'income') income += t.amount
-      else expense += t.amount
+      else if (t.type === 'expense') expense += t.amount
+      // transfers exclus
     }
     return { income, expense, balance: income - expense }
   }, [items])
@@ -49,7 +54,7 @@ export function useTransactions(userId: string) {
       const d = new Date(t.date)
       if (d.getMonth() === month && d.getFullYear() === year) {
         if (t.type === 'income') income += t.amount
-        else expense += t.amount
+        else if (t.type === 'expense') expense += t.amount
       }
     }
     return { income, expense, balance: income - expense }

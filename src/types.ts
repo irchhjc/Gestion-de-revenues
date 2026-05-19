@@ -1,13 +1,15 @@
-export type TransactionType = 'income' | 'expense'
+export type TransactionType = 'income' | 'expense' | 'transfer'
 
 export interface Transaction {
   id: string
   type: TransactionType
   amount: number
-  category: string
+  category: string // pour transfer, vide ou '__transfer__'
   note: string
   date: string // ISO YYYY-MM-DD
   createdAt: number
+  accountId: string // compte source (ou compte concerné pour income/expense)
+  toAccountId?: string // pour transfer : compte destination
   fromPlannedId?: string
 }
 
@@ -16,7 +18,18 @@ export interface Category {
   label: string
   icon: string
   color: string
-  type: TransactionType
+  type: 'income' | 'expense'
+}
+
+export type AccountKind = 'checking' | 'savings' | 'cash' | 'mobile_money' | 'other'
+
+export interface Account {
+  id: string
+  name: string
+  kind: AccountKind
+  initialBalance: number
+  createdAt: number
+  archived?: boolean
 }
 
 export type PlannedKind = 'debt' | 'scheduled'
@@ -30,7 +43,8 @@ export interface Planned {
   title: string
   amount: number
   txCategory: string
-  dueDate?: string // ISO YYYY-MM-DD — optionnel
+  accountId: string // compte impacté lors de la validation
+  dueDate?: string
   status: PlannedStatus
   paidAt?: string
   transactionId?: string
@@ -42,7 +56,7 @@ export type UserRole = 'admin' | 'user'
 
 export interface User {
   id: string
-  username: string // identifiant unique en minuscules
+  username: string
   fullName: string
   email: string
   location: string

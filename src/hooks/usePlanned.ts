@@ -21,8 +21,11 @@ function todayISO(): string {
   return `${y}-${m}-${day}`
 }
 
-export function usePlanned(userId: string) {
-  const [items, setItems] = useState<Planned[]>(() => loadPlanned(userId))
+export function usePlanned(userId: string, defaultAccountId: string) {
+  const [items, setItems] = useState<Planned[]>(() => {
+    const loaded = loadPlanned(userId)
+    return loaded.map(p => (p.accountId ? p : { ...p, accountId: defaultAccountId }))
+  })
 
   useEffect(() => {
     savePlanned(userId, items)

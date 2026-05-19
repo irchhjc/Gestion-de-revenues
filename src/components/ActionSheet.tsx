@@ -1,13 +1,14 @@
-import { ArrowLeftRight, CalendarClock, X } from 'lucide-react'
+import { ArrowLeftRight, ArrowRightLeft, CalendarClock, X } from 'lucide-react'
 
 interface Props {
   open: boolean
   onClose: () => void
   onTransaction: () => void
   onPlanned: () => void
+  onTransfer: () => void
 }
 
-export function ActionSheet({ open, onClose, onTransaction, onPlanned }: Props) {
+export function ActionSheet({ open, onClose, onTransaction, onPlanned, onTransfer }: Props) {
   if (!open) return null
 
   return (
@@ -30,43 +31,69 @@ export function ActionSheet({ open, onClose, onTransaction, onPlanned }: Props) 
         </div>
 
         <div className="p-5 pt-2 space-y-3">
-          <button
+          <ActionItem
+            icon={<ArrowLeftRight size={22} className="text-white" />}
+            colors="from-accent-400 to-accent-600 shadow-glow"
+            title="Transaction"
+            subtitle="Revenu ou dépense déjà effectuée"
             onClick={() => {
               onTransaction()
               onClose()
             }}
-            className="w-full flex items-center gap-4 p-4 rounded-2xl bg-white/[0.04] border border-white/[0.06] active:scale-[0.98] transition text-left"
-          >
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-accent-400 to-accent-600 flex items-center justify-center shadow-glow shrink-0">
-              <ArrowLeftRight size={22} className="text-white" />
-            </div>
-            <div className="flex-1">
-              <div className="text-white font-semibold text-base">Transaction</div>
-              <div className="text-white/50 text-xs mt-0.5">
-                Revenu ou dépense déjà effectuée
-              </div>
-            </div>
-          </button>
-
-          <button
+          />
+          <ActionItem
+            icon={<ArrowRightLeft size={22} className="text-white" />}
+            colors="from-cyan-400 to-blue-500 shadow-card"
+            title="Transfert entre comptes"
+            subtitle="Ex : retirer du courant vers le cash"
+            onClick={() => {
+              onTransfer()
+              onClose()
+            }}
+          />
+          <ActionItem
+            icon={<CalendarClock size={22} className="text-white" />}
+            colors="from-amber-400 to-orange-500 shadow-card"
+            title="Échéance ou dette"
+            subtitle="À payer ou à recevoir plus tard"
             onClick={() => {
               onPlanned()
               onClose()
             }}
-            className="w-full flex items-center gap-4 p-4 rounded-2xl bg-white/[0.04] border border-white/[0.06] active:scale-[0.98] transition text-left"
-          >
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-card shrink-0">
-              <CalendarClock size={22} className="text-white" />
-            </div>
-            <div className="flex-1">
-              <div className="text-white font-semibold text-base">Échéance ou dette</div>
-              <div className="text-white/50 text-xs mt-0.5">
-                À payer ou à recevoir plus tard
-              </div>
-            </div>
-          </button>
+          />
         </div>
       </div>
     </div>
+  )
+}
+
+function ActionItem({
+  icon,
+  colors,
+  title,
+  subtitle,
+  onClick,
+}: {
+  icon: React.ReactNode
+  colors: string
+  title: string
+  subtitle: string
+  onClick: () => void
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className="w-full flex items-center gap-4 p-4 rounded-2xl bg-white/[0.04] border border-white/[0.06] active:scale-[0.98] transition text-left"
+    >
+      <div
+        className={`w-12 h-12 rounded-xl bg-gradient-to-br ${colors} flex items-center justify-center shrink-0`}
+      >
+        {icon}
+      </div>
+      <div className="flex-1">
+        <div className="text-white font-semibold text-base">{title}</div>
+        <div className="text-white/50 text-xs mt-0.5">{subtitle}</div>
+      </div>
+    </button>
   )
 }
